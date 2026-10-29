@@ -420,6 +420,109 @@ func TestDeploymentTemplate(t *testing.T) {
 		})
 	}
 
+	// deploymentAnnotations
+	for _, tc := range []struct {
+		CaseName                      string
+		Values                        map[string]string
+		Release                       string
+		ExpectedDeploymentAnnotations map[string]string
+		ExpectedPodAnnotations        map[string]string
+	}{
+		{
+			CaseName: "one deploymentAnnotations",
+			Release:  "production",
+			Values: map[string]string{
+				"deploymentAnnotations.firstAnnotation": "expected-annotation",
+			},
+			ExpectedDeploymentAnnotations: map[string]string{
+				"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env": "prod",
+				"firstAnnotation":    "expected-annotation",
+			},
+			ExpectedPodAnnotations: map[string]string{
+				"checksum/application-secrets": "",
+				"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env":           "prod",
+			},
+		},
+		{
+			CaseName: "multiple deploymentAnnotations",
+			Release:  "production",
+			Values: map[string]string{
+				"deploymentAnnotations.firstAnnotation":  "expected-annotation",
+				"deploymentAnnotations.secondAnnotation": "expected-annotation",
+			},
+			ExpectedDeploymentAnnotations: map[string]string{
+				"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env": "prod",
+				"firstAnnotation":    "expected-annotation",
+				"secondAnnotation":   "expected-annotation",
+			},
+			ExpectedPodAnnotations: map[string]string{
+				"checksum/application-secrets": "",
+				"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env":           "prod",
+			},
+		},
+		{
+			CaseName: "deploymentAnnotations and podAnnotations are independent",
+			Release:  "production",
+			Values: map[string]string{
+				"deploymentAnnotations.deploymentOnly": "expected-deployment-annotation",
+				"podAnnotations.podOnly":               "expected-pod-annotation",
+			},
+			ExpectedDeploymentAnnotations: map[string]string{
+				"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env": "prod",
+				"deploymentOnly":     "expected-deployment-annotation",
+			},
+			ExpectedPodAnnotations: map[string]string{
+				"checksum/application-secrets": "",
+				"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env":           "prod",
+				"podOnly":                      "expected-pod-annotation",
+			},
+		},
+		{
+			CaseName: "no deploymentAnnotations",
+			Release:  "production",
+			Values:   map[string]string{},
+			ExpectedDeploymentAnnotations: map[string]string{
+				"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env": "prod",
+			},
+			ExpectedPodAnnotations: map[string]string{
+				"checksum/application-secrets": "",
+				"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+				"app.gitlab.com/env":           "prod",
+			},
+		},
+	} {
+		t.Run(tc.CaseName, func(t *testing.T) {
+			namespaceName := "minimal-ruby-app-" + strings.ToLower(random.UniqueId())
+
+			values := map[string]string{
+				"gitlab.app": "auto-devops-examples/minimal-ruby-app",
+				"gitlab.env": "prod",
+			}
+
+			mergeStringMap(values, tc.Values)
+
+			options := &helm.Options{
+				SetValues:      values,
+				KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
+			}
+
+			output := mustRenderTemplate(t, options, tc.Release, []string{"templates/deployment.yaml"}, nil)
+
+			var deployment appsV1.Deployment
+			helm.UnmarshalK8SYaml(t, output, &deployment)
+
+			require.Equal(t, tc.ExpectedDeploymentAnnotations, deployment.ObjectMeta.Annotations)
+			require.Equal(t, tc.ExpectedPodAnnotations, deployment.Spec.Template.ObjectMeta.Annotations)
+		})
+	}
+
 	// serviceAccountName
 	for _, tc := range []struct {
 		CaseName                   string

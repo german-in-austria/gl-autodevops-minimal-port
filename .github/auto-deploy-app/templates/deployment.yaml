@@ -10,6 +10,9 @@ metadata:
     {{- if .Values.gitlab.env }}
     app.gitlab.com/env: {{ .Values.gitlab.env | quote }}
     {{- end }}
+{{- if .Values.deploymentAnnotations }}
+{{- toYaml .Values.deploymentAnnotations | nindent 4 }}
+{{- end }}
   labels:
     track: "{{ .Values.application.track }}"
     tier: "{{ .Values.application.tier }}"
@@ -242,7 +245,7 @@ spec:
               value: {{ $httpHeader.value }}
 {{- end }}
 {{- end }}
-{{- else if eq .Values.readinessProbe.probeType "tcpSocket" }}
+{{- else if eq .Values.startupProbe.probeType "tcpSocket" }}
           tcpSocket:
             port: {{ .Values.startupProbe.port | default .Values.service.internalPort }}
 {{- else if eq .Values.startupProbe.probeType "exec" }}

@@ -209,7 +209,7 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 
 			if tc.ExpectedErrorRegexp != nil {
 				return
-            }
+			}
 
 			var deployments deploymentList
 			helm.UnmarshalK8SYaml(t, output, &deployments)
@@ -366,7 +366,7 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 			CaseName: "global image secrets are defined",
 			Release:  "production",
 			Values: map[string]string{
-				"image.secrets[0].name": "expected-secret",
+				"image.secrets[0].name":      "expected-secret",
 				"workers.worker1.command[0]": "echo",
 			},
 			ExpectedImagePullSecrets: []coreV1.LocalObjectReference{
@@ -406,36 +406,36 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 
 	// podAnnotations & labels
 	for _, tc := range []struct {
-		CaseName                   string
-		Values                     map[string]string
-		Release 				   string
-		ExpectedPodAnnotations     map[string]string
-		ExpectedPodLabels          map[string]string
+		CaseName               string
+		Values                 map[string]string
+		Release                string
+		ExpectedPodAnnotations map[string]string
+		ExpectedPodLabels      map[string]string
 	}{
 		{
 			CaseName: "one podAnnotations",
 			Release:  "production",
 			Values: map[string]string{
-				"podAnnotations.firstAnnotation":    "expected-annotation",
-				"workers.worker1.command[0]": "echo",
+				"podAnnotations.firstAnnotation": "expected-annotation",
+				"workers.worker1.command[0]":     "echo",
 			},
 			ExpectedPodAnnotations: map[string]string{
 				"checksum/application-secrets": "",
 				"firstAnnotation":              "expected-annotation",
 			},
 			ExpectedPodLabels: map[string]string{
-				"release":    "production",
-				"tier":       "worker",
-				"track":      "stable",
+				"release": "production",
+				"tier":    "worker",
+				"track":   "stable",
 			},
 		},
 		{
 			CaseName: "multiple podAnnotations",
 			Release:  "production",
 			Values: map[string]string{
-				"podAnnotations.firstAnnotation":    "expected-annotation",
-				"podAnnotations.secondAnnotation":   "expected-annotation",
-				"workers.worker1.command[0]": "echo",
+				"podAnnotations.firstAnnotation":  "expected-annotation",
+				"podAnnotations.secondAnnotation": "expected-annotation",
+				"workers.worker1.command[0]":      "echo",
 			},
 			ExpectedPodAnnotations: map[string]string{
 				"checksum/application-secrets": "",
@@ -448,8 +448,8 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 			CaseName: "one label",
 			Release:  "production",
 			Values: map[string]string{
-				"workers.worker1.labels.firstLabel":    "expected-label",
-				"workers.worker1.command[0]": "echo",
+				"workers.worker1.labels.firstLabel": "expected-label",
+				"workers.worker1.command[0]":        "echo",
 			},
 			ExpectedPodAnnotations: map[string]string{
 				"checksum/application-secrets": "",
@@ -462,15 +462,15 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 			CaseName: "multiple labels",
 			Release:  "production",
 			Values: map[string]string{
-				"workers.worker1.labels.firstLabel":    "expected-label",
-				"workers.worker1.labels.secondLabel":    "expected-label",
-				"workers.worker1.command[0]": "echo",
+				"workers.worker1.labels.firstLabel":  "expected-label",
+				"workers.worker1.labels.secondLabel": "expected-label",
+				"workers.worker1.command[0]":         "echo",
 			},
 			ExpectedPodAnnotations: map[string]string{
 				"checksum/application-secrets": "",
 			},
 			ExpectedPodLabels: map[string]string{
-				"firstLabel": "expected-label",
+				"firstLabel":  "expected-label",
 				"secondLabel": "expected-label",
 			},
 		},
@@ -513,6 +513,271 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 		})
 	}
 
+	// deploymentAnnotations
+	for _, tc := range []struct {
+		CaseName string
+		Release  string
+		Values   map[string]string
+
+		ExpectedDeployments []workerDeploymentAnnotationsTestCase
+	}{
+		{
+			CaseName: "one deploymentAnnotations",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":                            "echo",
+				"workers.worker1.deploymentAnnotations.firstAnnotation": "expected-annotation",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"firstAnnotation":    "expected-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+		{
+			CaseName: "multiple deploymentAnnotations",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":                             "echo",
+				"workers.worker1.deploymentAnnotations.firstAnnotation":  "expected-annotation",
+				"workers.worker1.deploymentAnnotations.secondAnnotation": "expected-annotation",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"firstAnnotation":    "expected-annotation",
+						"secondAnnotation":   "expected-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+		{
+			CaseName: "deploymentAnnotations are scoped per worker",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":                             "echo",
+				"workers.worker1.deploymentAnnotations.firstAnnotation":  "worker1-annotation",
+				"workers.worker2.command[0]":                             "echo",
+				"workers.worker2.deploymentAnnotations.secondAnnotation": "worker2-annotation",
+				"workers.worker3.command[0]":                             "echo",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"firstAnnotation":    "worker1-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+				{
+					ExpectedName: "production-worker2",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"secondAnnotation":   "worker2-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+				{
+					ExpectedName: "production-worker3",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+		{
+			// The top-level value reaches worker Deployments, mirroring how
+			// podAnnotations already applies to worker pods.
+			CaseName: "top-level deploymentAnnotations apply to workers",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":             "echo",
+				"workers.worker2.command[0]":             "echo",
+				"deploymentAnnotations.globalAnnotation": "expected-annotation",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"globalAnnotation":   "expected-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+				{
+					ExpectedName: "production-worker2",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"globalAnnotation":   "expected-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+		{
+			// Per-worker replaces the top-level value rather than merging with
+			// it, matching nodeSelector, tolerations and the other overridable
+			// worker settings.
+			CaseName: "per-worker deploymentAnnotations override the top-level value",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":                           "echo",
+				"workers.worker1.deploymentAnnotations.workerOverride": "worker1-annotation",
+				"workers.worker2.command[0]":                           "echo",
+				"deploymentAnnotations.globalAnnotation":               "expected-annotation",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"workerOverride":     "worker1-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+				{
+					ExpectedName: "production-worker2",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"globalAnnotation":   "expected-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+		{
+			CaseName: "deploymentAnnotations and podAnnotations are independent",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]":                           "echo",
+				"workers.worker1.deploymentAnnotations.deploymentOnly": "expected-deployment-annotation",
+				"podAnnotations.podOnly":                               "expected-pod-annotation",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+						"deploymentOnly":     "expected-deployment-annotation",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+						"podOnly":                      "expected-pod-annotation",
+					},
+				},
+			},
+		},
+		{
+			CaseName: "no deploymentAnnotations",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.command[0]": "echo",
+			},
+			ExpectedDeployments: []workerDeploymentAnnotationsTestCase{
+				{
+					ExpectedName: "production-worker1",
+					ExpectedDeploymentAnnotations: map[string]string{
+						"app.gitlab.com/app": "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env": "prod",
+					},
+					ExpectedPodAnnotations: map[string]string{
+						"checksum/application-secrets": "",
+						"app.gitlab.com/app":           "auto-devops-examples/minimal-ruby-app",
+						"app.gitlab.com/env":           "prod",
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.CaseName, func(t *testing.T) {
+			namespaceName := "minimal-ruby-app-" + strings.ToLower(random.UniqueId())
+
+			values := map[string]string{
+				"gitlab.app": "auto-devops-examples/minimal-ruby-app",
+				"gitlab.env": "prod",
+			}
+
+			mergeStringMap(values, tc.Values)
+
+			options := &helm.Options{
+				SetValues:      values,
+				KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
+			}
+
+			output := mustRenderTemplate(t, options, tc.Release, []string{"templates/worker-deployment.yaml"}, nil)
+
+			var deployments deploymentAppsV1List
+			helm.UnmarshalK8SYaml(t, output, &deployments)
+
+			require.Len(t, deployments.Items, len(tc.ExpectedDeployments))
+			for i, expectedDeployment := range tc.ExpectedDeployments {
+				deployment := deployments.Items[i]
+
+				require.Equal(t, expectedDeployment.ExpectedName, deployment.Name)
+				require.Equal(t, expectedDeployment.ExpectedDeploymentAnnotations, deployment.ObjectMeta.Annotations)
+				require.Equal(t, expectedDeployment.ExpectedPodAnnotations, deployment.Spec.Template.ObjectMeta.Annotations)
+			}
+		})
+	}
+
 	// hostAliases
 	for _, tc := range []struct {
 		CaseName string
@@ -525,7 +790,7 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 			CaseName: "hostAliases for two IP addresses",
 			Release:  "production",
 			Values: map[string]string{
-				"workers.worker1.command[0]": "echo",
+				"workers.worker1.command[0]":                  "echo",
 				"workers.worker1.hostAliases[0].ip":           "1.2.3.4",
 				"workers.worker1.hostAliases[0].hostnames[0]": "host1.example1.com",
 				"workers.worker1.hostAliases[1].ip":           "5.6.7.8",
@@ -581,14 +846,14 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 			CaseName: "dnsConfig with different DNS",
 			Release:  "production",
 			Values: map[string]string{
-				"workers.worker1.command[0]": "echo",
+				"workers.worker1.command[0]":                "echo",
 				"workers.worker1.dnsConfig.nameservers[0]":  "1.2.3.4",
 				"workers.worker1.dnsConfig.options[0].name": "edns0",
 			},
 
 			ExpectedDnsConfig: &coreV1.PodDNSConfig{
 				Nameservers: []string{"1.2.3.4"},
-				Options:     []coreV1.PodDNSConfigOption{
+				Options: []coreV1.PodDNSConfigOption{
 					{
 						Name: "edns0",
 					},
@@ -1090,6 +1355,60 @@ func TestWorkerDeploymentTemplate(t *testing.T) {
 					ExpectedCmd:            []string{"echo", "worker2"},
 					ExpectedLivenessProbe:  defaultLivenessProbe(),
 					ExpectedReadinessProbe: defaultReadinessProbe(),
+				},
+			},
+		},
+		{
+			CaseName: "default liveness and readiness probes are disabled",
+			Release:  "production",
+			Values: map[string]string{
+				"livenessProbe.enabled":      "false",
+				"readinessProbe.enabled":     "false",
+				"workers.worker1.command[0]": "echo",
+				"workers.worker1.command[1]": "worker1",
+				"workers.worker2.command[0]": "echo",
+				"workers.worker2.command[1]": "worker2",
+			},
+			ExpectedDeployments: []workerDeploymentTestCase{
+				{
+					ExpectedName:           "production-worker1",
+					ExpectedCmd:            []string{"echo", "worker1"},
+					ExpectedLivenessProbe:  nil,
+					ExpectedReadinessProbe: nil,
+				},
+				{
+					ExpectedName:           "production-worker2",
+					ExpectedCmd:            []string{"echo", "worker2"},
+					ExpectedLivenessProbe:  nil,
+					ExpectedReadinessProbe: nil,
+				},
+			},
+		},
+		{
+			CaseName: "worker level liveness and readiness probes are disabled",
+			Release:  "production",
+			Values: map[string]string{
+				"workers.worker1.livenessProbe.enabled":  "false",
+				"workers.worker1.readinessProbe.enabled": "false",
+				"workers.worker1.command[0]":             "echo",
+				"workers.worker1.command[1]":             "worker1",
+				"workers.worker2.livenessProbe.enabled":  "false",
+				"workers.worker2.readinessProbe.enabled": "false",
+				"workers.worker2.command[0]":             "echo",
+				"workers.worker2.command[1]":             "worker2",
+			},
+			ExpectedDeployments: []workerDeploymentTestCase{
+				{
+					ExpectedName:           "production-worker1",
+					ExpectedCmd:            []string{"echo", "worker1"},
+					ExpectedLivenessProbe:  nil,
+					ExpectedReadinessProbe: nil,
+				},
+				{
+					ExpectedName:           "production-worker2",
+					ExpectedCmd:            []string{"echo", "worker2"},
+					ExpectedLivenessProbe:  nil,
+					ExpectedReadinessProbe: nil,
 				},
 			},
 		},
@@ -1723,9 +2042,9 @@ func TestWorkerDeploymentTemplateWithExtraEnv(t *testing.T) {
 		{
 			name: "with extra env secret test",
 			values: map[string]string{
-				"workers.worker1.command[0]": "echo",
-				"workers.worker1.command[1]": "worker1",
-				"workers.worker1.extraEnv[0].name": "env-name-test",
+				"workers.worker1.command[0]":        "echo",
+				"workers.worker1.command[1]":        "worker1",
+				"workers.worker1.extraEnv[0].name":  "env-name-test",
 				"workers.worker1.extraEnv[0].value": "test-value",
 			},
 			expectedEnv: coreV1.EnvVar{
@@ -1740,7 +2059,7 @@ func TestWorkerDeploymentTemplateWithExtraEnv(t *testing.T) {
 			namespaceName := "minimal-ruby-app-" + strings.ToLower(random.UniqueId())
 
 			options := &helm.Options{
-				SetValues: tc.values,
+				SetValues:      tc.values,
 				KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
 			}
 

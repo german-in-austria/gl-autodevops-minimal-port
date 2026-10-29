@@ -108,8 +108,8 @@ func TestNetworkPolicy(t *testing.T) {
 
 			if tc.expectedErrorRegexp != nil {
 				return
-            }
-			
+			}
+
 			policy := new(netV1.NetworkPolicy)
 			helm.UnmarshalK8SYaml(t, output, policy)
 

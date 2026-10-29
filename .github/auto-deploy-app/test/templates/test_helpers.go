@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func init() {
 	chartName = "auto-deploy-app-" + m["version"].(string)
 }
 
-func mustRenderTemplate(t *testing.T, opts *helm.Options, releaseName string, templates []string, expectedErrorRegexp *regexp.Regexp, extraHelmArgs ...string) (string) {
+func mustRenderTemplate(t *testing.T, opts *helm.Options, releaseName string, templates []string, expectedErrorRegexp *regexp.Regexp, extraHelmArgs ...string) string {
 
 	output, err := helm.RenderTemplateE(t, opts, helmChartPath, releaseName, templates, extraHelmArgs...)
 	if expectedErrorRegexp != nil {
@@ -110,6 +110,12 @@ type workerDeploymentServiceAccountTestCase struct {
 
 type workerDeploymentHostNetworkTestCase struct {
 	ExpectedHostNetwork bool
+}
+
+type workerDeploymentAnnotationsTestCase struct {
+	ExpectedName                  string
+	ExpectedDeploymentAnnotations map[string]string
+	ExpectedPodAnnotations        map[string]string
 }
 
 type deploymentList struct {

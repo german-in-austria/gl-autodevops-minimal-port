@@ -35,7 +35,7 @@ func TestCronjobMeta(t *testing.T) {
 			},
 			ExpectedName:    "production",
 			ExpectedRelease: "production",
-			ExpectedLabels:	 nil,
+			ExpectedLabels:  nil,
 		},
 		{
 			CaseName: "extraLabels",
@@ -45,11 +45,11 @@ func TestCronjobMeta(t *testing.T) {
 				"cronjobs.job1.args[0]":    "hello",
 				"cronjobs.job2.command[0]": "echo",
 				"cronjobs.job2.args[0]":    "hello",
-				"extraLabels.firstLabel":    "expected-label",
+				"extraLabels.firstLabel":   "expected-label",
 			},
 			ExpectedName:    "production",
 			ExpectedRelease: "production",
-			ExpectedLabels:	 map[string]string{
+			ExpectedLabels: map[string]string{
 				"firstLabel": "expected-label",
 			},
 		},
@@ -65,7 +65,7 @@ func TestCronjobMeta(t *testing.T) {
 			},
 			ExpectedName:    "productionOverridden",
 			ExpectedRelease: "production",
-			ExpectedLabels:	 nil,
+			ExpectedLabels:  nil,
 		},
 	} {
 		t.Run(tc.CaseName, func(t *testing.T) {
@@ -337,6 +337,87 @@ func TestCronjobLivenessAndReadiness(t *testing.T) {
 			ExpectedLivenessProbe:  tcpLivenessProbe(),
 			ExpectedReadinessProbe: defaultReadinessProbe(),
 		},
+		{
+			CaseName: "disabled liveness probe and default readiness probe",
+			Release:  "production",
+			Values: map[string]string{
+				"cronjobs.job1.livenessProbe.port":      "5000",
+				"cronjobs.job1.livenessProbe.probeType": "tcpSocket",
+				"cronjobs.job1.livenessProbe.enabled":   "false",
+				"cronjobs.job2.livenessProbe.port":      "5000",
+				"cronjobs.job2.livenessProbe.probeType": "tcpSocket",
+				"cronjobs.job2.livenessProbe.enabled":   "false",
+			},
+
+			ExpectedLivenessProbe:  nil,
+			ExpectedReadinessProbe: defaultReadinessProbe(),
+		},
+		{
+			CaseName: "disabled liveness probe and enabled readiness probe",
+			Release:  "production",
+			Values: map[string]string{
+				"cronjobs.job1.livenessProbe.port":       "5000",
+				"cronjobs.job1.livenessProbe.probeType":  "tcpSocket",
+				"cronjobs.job1.livenessProbe.enabled":    "false",
+				"cronjobs.job1.readinessProbe.port":      "5000",
+				"cronjobs.job1.readinessProbe.probeType": "tcpSocket",
+				"cronjobs.job1.readinessProbe.enabled":   "true",
+				"cronjobs.job2.livenessProbe.port":       "5000",
+				"cronjobs.job2.livenessProbe.probeType":  "tcpSocket",
+				"cronjobs.job2.livenessProbe.enabled":    "false",
+				"cronjobs.job2.readinessProbe.port":      "5000",
+				"cronjobs.job2.readinessProbe.probeType": "tcpSocket",
+				"cronjobs.job2.readinessProbe.enabled":   "true",
+			},
+
+			ExpectedLivenessProbe:  nil,
+			ExpectedReadinessProbe: tcpReadinessProbe(),
+		},
+		{
+			CaseName: "default liveness probe disabled",
+			Release:  "production",
+			Values: map[string]string{
+				"livenessProbe.enabled":                  "false",
+				"cronjobs.job1.readinessProbe.port":      "5000",
+				"cronjobs.job1.readinessProbe.probeType": "tcpSocket",
+				"cronjobs.job1.readinessProbe.enabled":   "true",
+				"cronjobs.job2.readinessProbe.port":      "5000",
+				"cronjobs.job2.readinessProbe.probeType": "tcpSocket",
+				"cronjobs.job2.readinessProbe.enabled":   "true",
+			},
+
+			ExpectedLivenessProbe:  nil,
+			ExpectedReadinessProbe: tcpReadinessProbe(),
+		},
+		{
+			CaseName: "default readiness probe disabled",
+			Release:  "production",
+			Values: map[string]string{
+				"readinessProbe.enabled":                "false",
+				"cronjobs.job1.livenessProbe.port":      "5000",
+				"cronjobs.job1.livenessProbe.probeType": "tcpSocket",
+				"cronjobs.job1.livenessProbe.enabled":   "true",
+				"cronjobs.job2.livenessProbe.port":      "5000",
+				"cronjobs.job2.livenessProbe.probeType": "tcpSocket",
+				"cronjobs.job2.livenessProbe.enabled":   "true",
+			},
+
+			ExpectedLivenessProbe:  tcpLivenessProbe(),
+			ExpectedReadinessProbe: nil,
+		},
+		{
+			CaseName: "all default probes disabled",
+			Release:  "production",
+			Values: map[string]string{
+				"cronjobs.job1.command[0]": "echo",
+				"cronjobs.job2.args[0]":    "hello",
+				"readinessProbe.enabled":   "false",
+				"livenessProbe.enabled":    "false",
+			},
+
+			ExpectedLivenessProbe:  nil,
+			ExpectedReadinessProbe: nil,
+		},
 	} {
 		t.Run(tc.CaseName, func(t *testing.T) {
 			namespaceName := "minimal-ruby-app-" + strings.ToLower(random.UniqueId())
@@ -537,8 +618,8 @@ func TestCronjobResources(t *testing.T) {
 			CaseName: "added resources",
 			Release:  "production",
 			Values: map[string]string{
-				"cronjobs.job1.command[0]": "echo",
-				"cronjobs.job1.args[0]":    "hello",
+				"cronjobs.job1.command[0]":  "echo",
+				"cronjobs.job1.args[0]":     "hello",
 				"resources.limits.cpu":      "500m",
 				"resources.limits.memory":   "4Gi",
 				"resources.requests.cpu":    "200m",
@@ -546,11 +627,11 @@ func TestCronjobResources(t *testing.T) {
 			},
 
 			ExpectedResources: coreV1.ResourceRequirements{
-				Limits:   coreV1.ResourceList{
-					"cpu": resource.MustParse("500m"),
-					"memory": resource.MustParse("4Gi"),},
+				Limits: coreV1.ResourceList{
+					"cpu":    resource.MustParse("500m"),
+					"memory": resource.MustParse("4Gi")},
 				Requests: coreV1.ResourceList{
-					"cpu": resource.MustParse("200m"),
+					"cpu":    resource.MustParse("200m"),
 					"memory": resource.MustParse("2Gi"),
 				},
 			},
@@ -578,7 +659,7 @@ func TestCronjobResources(t *testing.T) {
 			helm.UnmarshalK8SYaml(t, output, &cronjobs)
 
 			for _, cronjob := range cronjobs.Items {
-				require.Equal(t, tc.ExpectedResources, cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Resources )
+				require.Equal(t, tc.ExpectedResources, cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Resources)
 			}
 		})
 	}
@@ -888,8 +969,8 @@ func TestCronJobTemplateWithContainerSecurityContext(t *testing.T) {
 	releaseName := "cronjob-with-container-security-context"
 
 	tcs := []struct {
-		name                        				string
-		values                      				map[string]string
+		name                                string
+		values                              map[string]string
 		expectedSecurityContextCapabilities []coreV1.Capability
 	}{
 		{
@@ -922,10 +1003,10 @@ func TestCronJobTemplateWithContainerSecurityContext(t *testing.T) {
 
 func TestCronjobImagePullSecrets(t *testing.T) {
 	for _, tc := range []struct {
-		CaseName                   string
-		Values                     map[string]string
-		Release 				   string
-		ExpectedImagePullSecrets   []coreV1.LocalObjectReference
+		CaseName                 string
+		Values                   map[string]string
+		Release                  string
+		ExpectedImagePullSecrets []coreV1.LocalObjectReference
 	}{
 		{
 			CaseName: "default secret",
@@ -1025,20 +1106,20 @@ func TestCronjobImagePullSecrets(t *testing.T) {
 
 func TestCronjobPodAnnotations(t *testing.T) {
 	for _, tc := range []struct {
-		CaseName                   string
-		Values                     map[string]string
-		Release 				   string
-		ExpectedPodAnnotations     map[string]string
+		CaseName               string
+		Values                 map[string]string
+		Release                string
+		ExpectedPodAnnotations map[string]string
 	}{
 		{
 			CaseName: "one podAnnotations",
 			Release:  "production",
 			Values: map[string]string{
-				"cronjobs.job1.command[0]":           "echo",
-				"cronjobs.job1.args[0]":              "hello",
-				"cronjobs.job2.command[0]":           "echo",
-				"cronjobs.job2.args[0]":              "hello",
-				"podAnnotations.firstAnnotation":    "expected-annotation",
+				"cronjobs.job1.command[0]":       "echo",
+				"cronjobs.job1.args[0]":          "hello",
+				"cronjobs.job2.command[0]":       "echo",
+				"cronjobs.job2.args[0]":          "hello",
+				"podAnnotations.firstAnnotation": "expected-annotation",
 			},
 
 			ExpectedPodAnnotations: map[string]string{
@@ -1052,12 +1133,12 @@ func TestCronjobPodAnnotations(t *testing.T) {
 			CaseName: "multiple podAnnotations",
 			Release:  "production",
 			Values: map[string]string{
-				"cronjobs.job1.command[0]":           "echo",
-				"cronjobs.job1.args[0]":              "hello",
-				"cronjobs.job2.command[0]":           "echo",
-				"cronjobs.job2.args[0]":              "hello",
-				"podAnnotations.firstAnnotation":    "expected-annotation",
-				"podAnnotations.secondAnnotation":   "expected-annotation",
+				"cronjobs.job1.command[0]":        "echo",
+				"cronjobs.job1.args[0]":           "hello",
+				"cronjobs.job2.command[0]":        "echo",
+				"cronjobs.job2.args[0]":           "hello",
+				"podAnnotations.firstAnnotation":  "expected-annotation",
+				"podAnnotations.secondAnnotation": "expected-annotation",
 			},
 
 			ExpectedPodAnnotations: map[string]string{

@@ -25,30 +25,30 @@ func TestServiceTemplate_ServiceType(t *testing.T) {
 		ExpectedAnnotations map[string]string
 	}{
 		{
-			name:         "defaults",
-			expectedType: "ClusterIP",
-			expectedPort: coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), Protocol: "TCP", Name: "web"},
+			name:                "defaults",
+			expectedType:        "ClusterIP",
+			expectedPort:        coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), Protocol: "TCP", Name: "web"},
 			ExpectedAnnotations: nil,
 		},
 		{
-			name:         "with type NodePort but no nodePort value",
-			values:       map[string]string{"service.type": "NodePort"},
-			expectedType: "NodePort",
-			expectedPort: coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), NodePort: 0, Protocol: "TCP", Name: "web"},
+			name:                "with type NodePort but no nodePort value",
+			values:              map[string]string{"service.type": "NodePort"},
+			expectedType:        "NodePort",
+			expectedPort:        coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), NodePort: 0, Protocol: "TCP", Name: "web"},
 			ExpectedAnnotations: nil,
 		},
 		{
-			name:         "with type NodePort and nodePort set",
-			values:       map[string]string{"service.type": "NodePort", "service.nodePort": "12345"},
-			expectedType: "NodePort",
-			expectedPort: coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), NodePort: 12345, Protocol: "TCP", Name: "web"},
+			name:                "with type NodePort and nodePort set",
+			values:              map[string]string{"service.type": "NodePort", "service.nodePort": "12345"},
+			expectedType:        "NodePort",
+			expectedPort:        coreV1.ServicePort{Port: 5000, TargetPort: intstr.FromInt(5000), NodePort: 12345, Protocol: "TCP", Name: "web"},
 			ExpectedAnnotations: nil,
 		},
 		{
-			name:         "with type NodePort and nodePort set",
-			values:       map[string]string{
-				"service.type": "NodePort",
-				"service.nodePort": "12345",
+			name: "with type NodePort and nodePort set",
+			values: map[string]string{
+				"service.type":             "NodePort",
+				"service.nodePort":         "12345",
 				"service.annotations.key1": "value1",
 				"service.annotations.key2": "value2",
 			},
@@ -64,7 +64,7 @@ func TestServiceTemplate_ServiceType(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := &helm.Options{
-				SetValues:   tc.values,
+				SetValues: tc.values,
 			}
 			output := mustRenderTemplate(t, opts, releaseName, templates, tc.expectedErrorRegexp)
 
@@ -104,17 +104,17 @@ func TestServiceTemplate_DifferentTracks(t *testing.T) {
 			expectedSelector: map[string]string{"app": "production-canary", "tier": "web", "track": "canary"},
 		},
 		{
-			name:             "with canary track and labels",
-			releaseName:      "production-canary",
-			values:           map[string]string{
-				"application.track": "canary",
+			name:        "with canary track and labels",
+			releaseName: "production-canary",
+			values: map[string]string{
+				"application.track":      "canary",
 				"extraLabels.firstLabel": "expected-label",
 			},
-			expectedName:     "production-canary-auto-deploy",
-			expectedLabels:   map[string]string{
-				"app": "production-canary",
-				"release": "production-canary",
-				"track": "canary",
+			expectedName: "production-canary-auto-deploy",
+			expectedLabels: map[string]string{
+				"app":        "production-canary",
+				"release":    "production-canary",
+				"track":      "canary",
 				"firstLabel": "expected-label",
 			},
 			expectedSelector: map[string]string{"app": "production-canary", "tier": "web", "track": "canary"},
@@ -124,7 +124,7 @@ func TestServiceTemplate_DifferentTracks(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := &helm.Options{
-				SetValues:   tc.values,
+				SetValues: tc.values,
 			}
 			output := mustRenderTemplate(t, opts, tc.releaseName, templates, tc.expectedErrorRegexp)
 
@@ -170,7 +170,7 @@ func TestServiceTemplate_Disable(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := &helm.Options{
-				SetValues:   tc.values,
+				SetValues: tc.values,
 			}
 			output := mustRenderTemplate(t, opts, releaseName, templates, tc.expectedErrorRegexp)
 

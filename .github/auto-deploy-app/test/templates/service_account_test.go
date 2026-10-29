@@ -30,7 +30,7 @@ func TestServiceAccountTemplate(t *testing.T) {
 			Values:   map[string]string{},
 			ExpectedErrorRegexp: regexp.MustCompile(
 				"Error: could not find template templates/service-account.yaml in chart",
-			),	
+			),
 			ExpectedLabels: nil,
 		},
 		{
@@ -51,7 +51,7 @@ func TestServiceAccountTemplate(t *testing.T) {
 			},
 			ExpectedName:        "anAccountName",
 			ExpectedAnnotations: nil,
-			ExpectedLabels: nil,
+			ExpectedLabels:      nil,
 		},
 		{
 			CaseName: "with annotations",
@@ -71,11 +71,11 @@ func TestServiceAccountTemplate(t *testing.T) {
 		{
 			CaseName: "with labels",
 			Values: map[string]string{
-				"serviceAccount.createNew":        "true",
-				"serviceAccount.name":             "anAccountName",
-				"extraLabels.firstLabel":          "expected-label",
+				"serviceAccount.createNew": "true",
+				"serviceAccount.name":      "anAccountName",
+				"extraLabels.firstLabel":   "expected-label",
 			},
-			ExpectedName: "anAccountName",
+			ExpectedName:        "anAccountName",
 			ExpectedAnnotations: nil,
 			ExpectedLabels: map[string]string{
 				"firstLabel": "expected-label",
@@ -101,7 +101,7 @@ func TestServiceAccountTemplate(t *testing.T) {
 
 			if tc.ExpectedErrorRegexp != nil {
 				return
-            }
+			}
 
 			var serviceAccount coreV1.ServiceAccount
 			helm.UnmarshalK8SYaml(t, output, &serviceAccount)

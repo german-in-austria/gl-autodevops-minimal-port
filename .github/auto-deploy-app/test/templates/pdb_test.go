@@ -62,8 +62,8 @@ func TestPdbTemplate(t *testing.T) {
 
 			if tc.ExpectedErrorRegexp != nil {
 				return
-            }
-			
+			}
+
 			var podDisruptionBudget v1beta1.PodDisruptionBudget
 			helm.UnmarshalK8SYaml(t, output, &podDisruptionBudget)
 

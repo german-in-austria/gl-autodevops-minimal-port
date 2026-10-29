@@ -39,9 +39,9 @@ func TestHPA_AutoscalingV1(t *testing.T) {
 			ExpectedLabels:      nil,
 		},
 		{
-			name:                "with hpa enabled and requests defined",
-			values:              map[string]string{
-				"hpa.enabled": "true",
+			name: "with hpa enabled and requests defined",
+			values: map[string]string{
+				"hpa.enabled":            "true",
 				"resources.requests.cpu": "500",
 			},
 			expectedName:        "hpa-test-auto-deploy",
@@ -51,17 +51,17 @@ func TestHPA_AutoscalingV1(t *testing.T) {
 			ExpectedLabels:      nil,
 		},
 		{
-			name:                "with hpa enabled and requests, label defined",
-			values:              map[string]string{
-				"hpa.enabled": "true",
+			name: "with hpa enabled and requests, label defined",
+			values: map[string]string{
+				"hpa.enabled":            "true",
 				"resources.requests.cpu": "500",
-				"extraLabels.firstLabel":    "expected-label",
+				"extraLabels.firstLabel": "expected-label",
 			},
 			expectedName:        "hpa-test-auto-deploy",
 			expectedMinReplicas: 1,
 			expectedMaxReplicas: 5,
 			expectedTargetCPU:   80,
-			ExpectedLabels:      map[string]string{
+			ExpectedLabels: map[string]string{
 				"firstLabel": "expected-label",
 			},
 		},
@@ -70,13 +70,13 @@ func TestHPA_AutoscalingV1(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := &helm.Options{
-				SetValues:   tc.values,
+				SetValues: tc.values,
 			}
 			output := mustRenderTemplate(t, opts, releaseName, templates, tc.expectedErrorRegexp)
 
 			if tc.expectedErrorRegexp != nil {
 				return
-            }
+			}
 
 			hpa := new(autoscalingV1.HorizontalPodAutoscaler)
 			helm.UnmarshalK8SYaml(t, output, hpa)
@@ -145,7 +145,7 @@ resources:
 
 			if tc.expectedErrorRegexp != nil {
 				return
-            }
+			}
 
 			hpa := new(autoscalingV2.HorizontalPodAutoscaler)
 			helm.UnmarshalK8SYaml(t, output, hpa)

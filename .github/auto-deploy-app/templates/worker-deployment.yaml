@@ -14,6 +14,9 @@ items:
       {{- if $.Values.gitlab.env }}
       app.gitlab.com/env: {{ $.Values.gitlab.env | quote }}
       {{- end }}
+{{- with $deploymentAnnotationsConfig := default $.Values.deploymentAnnotations $workerConfig.deploymentAnnotations -}}
+{{- toYaml $deploymentAnnotationsConfig | nindent 6 }}
+{{- end }}
     labels:
       track: "{{ $.Values.application.track }}"
       tier: worker
@@ -150,7 +153,7 @@ items:
           - name: GITLAB_ENVIRONMENT_URL
             value: {{ $.Values.gitlab.envURL | quote }}
 {{- with $livenessProbeConfig := default $.Values.livenessProbe $workerConfig.livenessProbe -}}
-{{- if $livenessProbeConfig }}
+{{- if and ($livenessProbeConfig) (or ($livenessProbeConfig.enabled) (not (hasKey $livenessProbeConfig "enabled"))) }}
           livenessProbe:
 {{- if eq $livenessProbeConfig.probeType "httpGet" }}
             httpGet:
@@ -177,7 +180,7 @@ items:
 {{- end }}
 {{- end }}
 {{- with $readinessProbeConfig := default $.Values.readinessProbe $workerConfig.readinessProbe -}}
-{{- if $readinessProbeConfig }}
+{{- if and ($readinessProbeConfig) (or ($readinessProbeConfig.enabled) (not (hasKey $readinessProbeConfig "enabled"))) }}
           readinessProbe:
 {{- if eq $readinessProbeConfig.probeType "httpGet" }}
             httpGet:

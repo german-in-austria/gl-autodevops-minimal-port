@@ -17,6 +17,7 @@ lifecycle: { }
 #   exec:
 #     command: ["/bin/sh", "-c", "sleep 10"]
 podAnnotations: { }
+deploymentAnnotations: { }
 nodeSelector: { }
 securityContext: { }
 containerSecurityContext: { }
@@ -94,7 +95,8 @@ ingress:
     acme: true
     secretName: ""
     useDefaultSecret: false
-  # className: nginx
+  # className: traefik
+  # classname: rke2-ingress-nginx-migration
   modSecurity:
     enabled: false
     secRuleEngine: "DetectionOnly"
@@ -177,6 +179,31 @@ networkPolicy:
               matchLabels:
                 app.gitlab.com/managed_by: gitlab
 
+roles: { }
+#  role-name:
+#    rules:
+#      - apiGroups: [""]
+#        resources:
+#          - pods
+#        verbs:
+#          - list
+#          - get
+#          - watch
+#      - apiGroups: [""]
+#        resources:
+#          - pods/logs
+#        verbs:
+#          - list
+#          - get
+
+roleBindings: { }
+#  role-binding-name:
+#    roleRefName: role-name
+#    subjects:
+#      - kind: ServiceAccount
+#        name: "{{ $.Values.serviceAccount.name }}"
+#        namespace: "{{ .Release.Namespace }}"
+
 serviceAccount:
   name:
   annotations: { }
@@ -242,6 +269,8 @@ workers: { }
   #     - dns2.DOMAIN2
   #   labels:
   #     worker-type: worker
+  #   deploymentAnnotations:
+  #     example.com/annotation: value
   #   command:
   #   - /bin/herokuish
   #   - procfile
